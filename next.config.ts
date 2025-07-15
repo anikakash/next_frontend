@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
         hostname: "**.amazonaws.com",
         port: "",
       },
+      {
+        protocol: "https",
+        hostname: "balanced-luck-2608809e66.strapiapp.com",
+        port: "",
+      }
     ],
   },
 };

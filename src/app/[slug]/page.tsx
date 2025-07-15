@@ -2,7 +2,7 @@ import Image from "next/image";
 import { ArrowLeft, Calendar, Clock, User, Tag } from "lucide-react";
 import Link from "next/link";
 import { BlocksRenderer } from "@strapi/blocks-react-renderer";
-import { BlogResponse } from "./blogType";
+import { BlogResponse, Category, Comment } from "@/graphQL/types";
 import CommentForm from "./CommentForm";
 import qs from "qs";
 import { getBlogDetails } from "@/graphQL";
@@ -15,11 +15,10 @@ const formatDate = (dateString: string) => {
   });
 };
 
-async function BlogDetailsPage({ params }: { params: { slug: string } }) {
+async function BlogDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
   const myBlog = await getBlogDetails(slug);
-
   if (!myBlog) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-10 text-center">
@@ -114,14 +113,14 @@ async function BlogDetailsPage({ params }: { params: { slug: string } }) {
         {/* Add a comment section */}
         <div className="mt-12">
           <h2 className="text-2xl font-semibold mb-6">Add a Comment</h2>
-          <CommentForm blogId={myBlog.documentId as string} />
+          <CommentForm blogId={myBlog.documentId } />
         </div>
         {myBlog.comments && myBlog.comments.length > 0 && (
           <div className="mt-12">
             <h2 className="text-2xl font-semibold mb-6">Comments</h2>
             <div className="space-y-6">
-              {myBlog.comments.map(
-                (comment, idx) =>
+              {myBlog.comments.length>0 && myBlog.comments.map(
+                (comment ) =>
                   comment.approved && (
                     <div
                       key={comment.documentId}
@@ -129,7 +128,7 @@ async function BlogDetailsPage({ params }: { params: { slug: string } }) {
                     >
                       <div className="flex items-center gap-2 mb-3">
                         <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium">
-                          {comment.name.charAt(0).toUpperCase()}
+                          {comment?.name?.charAt(0).toUpperCase()}
                         </div>
                         <h3 className="font-medium">{comment.name}</h3>
                         <span className="text-sm text-gray-500">
@@ -138,7 +137,7 @@ async function BlogDetailsPage({ params }: { params: { slug: string } }) {
                       </div>
                       <div className="prose prose-sm">
                         {/* <BlocksRenderer content={comment.comment as any}/> */}
-                        <p>{comment.comment as any}</p>
+                        <p>{comment.comment}</p>
                       </div>
                     </div>
                   )
