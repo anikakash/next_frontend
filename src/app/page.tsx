@@ -4,7 +4,7 @@ import Link from "next/link";
 export default async function Home() {
   const res = await fetch(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/blogs?populate=*`);
   const blogs = await res.json();
-  console.log("BLogs: ", blogs);
+  // console.log("BLogs: ", blogs);
 
   // Format date function
   const formatDate = (dateString: string) => {

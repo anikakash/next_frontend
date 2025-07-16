@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "balanced-luck-2608809e66.strapiapp.com",
+        hostname: "balanced-luck-2608809e66.media.strapiapp.com",
         port: "",
       }
     ],

@@ -42,10 +42,10 @@ export const getBlogDetails = async (slug: string): Promise<Blog | null> => {
 
   try {
     const graphqlData = await client.request<BlogResponse>(query, { slug });
-    console.log('G Data: ', graphqlData.blogs[0])
+    // console.log('G Data: ', graphqlData.blogs[0])
     return graphqlData.blogs[0] as Blog
   } catch (e) {
-    console.log(e);
+    // console.log(e);
     return null;
   }
 };
