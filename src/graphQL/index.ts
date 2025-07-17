@@ -2,13 +2,13 @@
 import { BlogResponse, Blog } from "./types";
 import qs from "qs";
 import { gql, GraphQLClient } from "graphql-request";
+import { unstable_cache } from 'next/cache'
+
 
 const graphQlEndPoint = `${process.env.NEXT_PUBLIC_STRAPI_URL}/graphql`;
 const client = new GraphQLClient(graphQlEndPoint);
 
-export const getBlogDetails = async (slug: string): Promise<Blog | null> => {
-  
-  const query = gql`
+ const query = gql`
     query GetBlogBySlug($slug: String!) {
       blogs(filters: { slug: { eqi: $slug } }) {
         title
@@ -40,6 +40,8 @@ export const getBlogDetails = async (slug: string): Promise<Blog | null> => {
     }
   `;
 
+export const getBlogDetails = async (slug: string): Promise<Blog | null> => {
+  
   try {
     const graphqlData = await client.request<BlogResponse>(query, { slug });
     // console.log('G Data: ', graphqlData.blogs[0])
@@ -49,3 +51,14 @@ export const getBlogDetails = async (slug: string): Promise<Blog | null> => {
     return null;
   }
 };
+
+export const getCachedBlog = unstable_cache(
+    async(slug)=>{
+      const response = await client.request<BlogResponse>(query, { slug });
+      return response.blogs[0] as Blog
+    },
+    undefined, 
+    {
+      revalidate: 300,
+    }
+  )

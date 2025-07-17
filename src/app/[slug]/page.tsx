@@ -5,7 +5,7 @@ import { BlocksRenderer } from "@strapi/blocks-react-renderer";
 import { BlogResponse, Category, Comment } from "@/graphQL/types";
 import CommentForm from "./CommentForm";
 import qs from "qs";
-import { getBlogDetails } from "@/graphQL";
+import { getBlogDetails, getCachedBlog } from "@/graphQL";
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString("en-US", {
@@ -15,10 +15,23 @@ const formatDate = (dateString: string) => {
   });
 };
 
+
+// export async function generateStaticParams() {
+//  const res = await fetch(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/blogs?populate=*`);
+//   const blogs = await res.json();
+
+
+ 
+//   return blogs?.data.map((blog : any) => ({
+//     slug: blog.slug,
+//   }))
+// }
+
 async function BlogDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
-  const myBlog = await getBlogDetails(slug);
+  // const myBlog = await getBlogDetails(slug);
+  const myBlog = await getCachedBlog(slug);
   if (!myBlog) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-10 text-center">
