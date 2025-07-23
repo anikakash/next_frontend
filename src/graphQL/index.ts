@@ -55,6 +55,7 @@ export const getBlogDetails = async (slug: string): Promise<Blog | null> => {
 export const getCachedBlog = unstable_cache(
     async(slug)=>{
       const response = await client.request<BlogResponse>(query, { slug });
+      console.log(response)
       return response.blogs[0] as Blog
     },
     undefined, 

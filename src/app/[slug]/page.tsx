@@ -6,6 +6,10 @@ import { BlogResponse, Category, Comment } from "@/graphQL/types";
 import CommentForm from "./CommentForm";
 import qs from "qs";
 import { getBlogDetails, getCachedBlog } from "@/graphQL";
+import RevalidateButton from "./RevalidateButton";
+
+
+export const revalidate = 3600;
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString("en-US", {
@@ -15,23 +19,39 @@ const formatDate = (dateString: string) => {
   });
 };
 
-
 // export async function generateStaticParams() {
-//  const res = await fetch(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/blogs?populate=*`);
+//   const res = await fetch(
+//     `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/blogs?blogs?fields[0]=slug&pagination[pageSize]=999&pagination[page]=1`,
+//     { next: { revalidate: 0 } }
+//   );
 //   const blogs = await res.json();
 
-
- 
-//   return blogs?.data.map((blog : any) => ({
+//   return blogs?.data.map((blog: any) => ({
 //     slug: blog.slug,
-//   }))
+//   }));
 // }
 
-async function BlogDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
+async function BlogDetailsPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = await params;
 
   // const myBlog = await getBlogDetails(slug);
-  const myBlog = await getCachedBlog(slug);
+  // const myBlog = await getCachedBlog(slug);
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/blogs?fields[0]=title&fields[1]=description&fields[2]=createdAt&fields[3]=documentId&filters[slug][$eq]=${slug}&populate[author][fields][0]=documentId&populate[author][fields][1]=name&populate[categories][fields][0]=documentId&populate[categories][fields][1]=name&populate[image][fields][0]=url&populate[image][fields][1]=height&populate[image][fields][2]=width&populate[image][fields][3]=alternativeText&populate[comments][fields][0]=documentId&populate[comments][fields][1]=name&populate[comments][fields][2]=comment&populate[comments][fields][3]=createdAt&populate[comments][fields][4]=approved`,
+    { next: { revalidate: 300, tags: [slug] }, cache: "force-cache" }
+  );
+  const timeRes = await fetch(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/currentTime`, 
+    { next: { revalidate: 300, tags: [slug] }, cache: "force-cache" })
+  const time = await timeRes.json();
+  console.log("TIME: ", time);
+  const val = await res.json();
+  const myBlog = val.data[0];
+  console.log("MyBlog: ", myBlog);
+
   if (!myBlog) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-10 text-center">
@@ -81,7 +101,7 @@ async function BlogDetailsPage({ params }: { params: Promise<{ slug: string }> }
         {/* Categories */}
         {myBlog.categories?.length > 0 && (
           <div className="flex flex-wrap gap-3">
-            {myBlog.categories.map((category) => (
+            {myBlog.categories.map((category: any) => (
               <span
                 key={category.documentId}
                 className="inline-flex items-center gap-1 bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm"
@@ -97,7 +117,7 @@ async function BlogDetailsPage({ params }: { params: Promise<{ slug: string }> }
         <h1 className="text-3xl font-extrabold tracking-tight">
           {myBlog.title}
         </h1>
-
+       <pre>{JSON.stringify(time)}</pre>
         {/* Meta information */}
         <div className="flex flex-wrap items-center gap-6 text-gray-600 text-sm">
           <div className="flex items-center gap-2">
@@ -116,7 +136,7 @@ async function BlogDetailsPage({ params }: { params: Promise<{ slug: string }> }
             </span>
           </div>
         </div>
-
+        <RevalidateButton/>
         {/* Blog content */}
         <div className="prose max-w-none prose-headings:font-semibold prose-img:rounded-md mt-8">
           <BlocksRenderer content={myBlog.description as any} />
@@ -126,35 +146,36 @@ async function BlogDetailsPage({ params }: { params: Promise<{ slug: string }> }
         {/* Add a comment section */}
         <div className="mt-12">
           <h2 className="text-2xl font-semibold mb-6">Add a Comment</h2>
-          <CommentForm blogId={myBlog.documentId } />
+          <CommentForm blogId={myBlog.documentId} slug={slug} />
         </div>
         {myBlog.comments && myBlog.comments.length > 0 && (
           <div className="mt-12">
             <h2 className="text-2xl font-semibold mb-6">Comments</h2>
             <div className="space-y-6">
-              {myBlog.comments.length>0 && myBlog.comments.map(
-                (comment ) =>
-                  comment.approved && (
-                    <div
-                      key={comment.documentId}
-                      className="bg-gray-50 border p-6 rounded-lg shadow-sm"
-                    >
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium">
-                          {comment?.name?.charAt(0).toUpperCase()}
+              {myBlog.comments.length > 0 &&
+                myBlog.comments.map(
+                  (comment: any) =>
+                    (
+                      <div
+                        key={comment.documentId}
+                        className="bg-gray-50 border p-6 rounded-lg shadow-sm"
+                      >
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium">
+                            {comment?.name?.charAt(0).toUpperCase()}
+                          </div>
+                          <h3 className="font-medium">{comment.name}</h3>
+                          <span className="text-sm text-gray-500">
+                            • {formatDate(comment.createdAt)}
+                          </span>
                         </div>
-                        <h3 className="font-medium">{comment.name}</h3>
-                        <span className="text-sm text-gray-500">
-                          • {formatDate(comment.createdAt)}
-                        </span>
+                        <div className="prose prose-sm">
+                          {/* <BlocksRenderer content={comment.comment as any}/> */}
+                          <p>{comment.comment}</p>
+                        </div>
                       </div>
-                      <div className="prose prose-sm">
-                        {/* <BlocksRenderer content={comment.comment as any}/> */}
-                        <p>{comment.comment}</p>
-                      </div>
-                    </div>
-                  )
-              )}
+                    )
+                )}
             </div>
           </div>
         )}

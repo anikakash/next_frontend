@@ -1,22 +1,24 @@
 "use client";
 
 import { useState } from "react";
+import { addComment } from "./action";
+
 
 interface CommentFormProps {
   blogId: string;
+  slug: string;
 }
 
-const CommentForm = ({ blogId }: CommentFormProps) => {
+const CommentForm = ({ blogId, slug }: CommentFormProps) => {
   const [name, setName] = useState("");
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+ const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Form validation
     if (!name.trim() || !comment.trim()) {
       setError("Please fill out all fields");
       return;
@@ -26,25 +28,15 @@ const CommentForm = ({ blogId }: CommentFormProps) => {
     setError(null);
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_STRAPI_URL}/api/comments`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          data: {
-            name,
-            comment,
-            blog: blogId,
-            approved: false,
-          },
-        }),
+      const result = await addComment({
+        name,
+        comment,
+        blogId,
+        slug,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("API error:", errorData);
-        throw new Error("Failed to submit comment");
+      if (!result.success) {
+        throw new Error(result.error || "Failed to submit comment");
       }
 
       // Clear form and show success message
