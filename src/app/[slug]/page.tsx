@@ -42,12 +42,12 @@ async function BlogDetailsPage({
   // const myBlog = await getCachedBlog(slug);
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_STRAPI_URL}/api/blogs?fields[0]=title&fields[1]=description&fields[2]=createdAt&fields[3]=documentId&filters[slug][$eq]=${slug}&populate[author][fields][0]=documentId&populate[author][fields][1]=name&populate[categories][fields][0]=documentId&populate[categories][fields][1]=name&populate[image][fields][0]=url&populate[image][fields][1]=height&populate[image][fields][2]=width&populate[image][fields][3]=alternativeText&populate[comments][fields][0]=documentId&populate[comments][fields][1]=name&populate[comments][fields][2]=comment&populate[comments][fields][3]=createdAt&populate[comments][fields][4]=approved`,
-    { next: { revalidate: 300, tags: [slug] }, cache: "force-cache" }
+    { next: { revalidate: 120, tags: [slug] }, cache: "force-cache" }
   );
-  const timeRes = await fetch(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/currentTime`, 
-    { next: { revalidate: 300, tags: [slug] }, cache: "force-cache" })
-  const time = await timeRes.json();
-  console.log("TIME: ", time);
+  // const timeRes = await fetch(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/currentTime`, 
+  //   { next: { revalidate: 300, tags: [slug] }, cache: "force-cache" })
+  // const time = await timeRes.json();
+  // console.log("TIME: ", time);
   const val = await res.json();
   const myBlog = val.data[0];
   console.log("MyBlog: ", myBlog);
@@ -117,7 +117,7 @@ async function BlogDetailsPage({
         <h1 className="text-3xl font-extrabold tracking-tight">
           {myBlog.title}
         </h1>
-       <pre>{JSON.stringify(time)}</pre>
+       {/* <pre>{JSON.stringify(time)}</pre> */}
         {/* Meta information */}
         <div className="flex flex-wrap items-center gap-6 text-gray-600 text-sm">
           <div className="flex items-center gap-2">
